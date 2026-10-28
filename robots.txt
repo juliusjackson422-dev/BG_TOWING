@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bgtowingandrepair.com/sitemap.xml
