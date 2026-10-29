@@ -588,6 +588,108 @@ html{scroll-behavior:smooth;scroll-padding-top:calc(120px + env(safe-area-inset-
 /* the number is the product — give it weight in the header */
 .hdr-tel{font-size:1.05rem;letter-spacing:-.012em;font-variant-numeric:tabular-nums;padding:13px 21px}
 
+/* =================== SCROLL SCENE: FLATBED LOAD ===================
+   A pinned, scroll-driven diagram of the one motion that defines this trade:
+   deck tilts, cable pays out, car winches on, deck levels. Pure SVG — no
+   library, no 3D, nothing to distort. Static end-state under reduced motion. */
+.scene{position:relative;background:var(--steel);border-block:1px solid var(--line)}
+.scene-track{height:300vh}                 /* scroll distance the sequence consumes */
+.scene-pin{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+.scene-in{width:100%;max-width:1240px;margin-inline:auto;padding-left:var(--gut-l);padding-right:var(--gut-r)}
+.scene-head{display:flex;flex-direction:column;gap:12px;max-width:50ch;margin-bottom:clamp(14px,2.4vw,28px)}
+.scene-art{width:100%}
+.scene-art svg{width:100%;height:auto;max-height:52vh;display:block;overflow:visible}
+
+/* stage readout — real text, not only motion */
+.stages{display:flex;gap:0;margin-top:clamp(14px,2.2vw,26px);border-top:1px solid var(--line)}
+.stage{
+  flex:1;padding:14px 16px 0;border-top:3px solid transparent;margin-top:-1px;min-width:0;
+  transition:border-color .35s var(--ease),opacity .35s var(--ease);opacity:.42
+}
+.stage.on{border-top-color:var(--amber);opacity:1}
+.stage b{display:block;font-family:var(--display);font-size:.95rem;font-weight:700;text-transform:uppercase;letter-spacing:-.01em;margin-bottom:3px}
+.stage span{font-size:.83rem;color:var(--conc);line-height:1.45}
+.stage .n{font-family:var(--mono);font-size:.66rem;color:var(--amber);letter-spacing:.12em;display:block;margin-bottom:5px}
+
+/* the drawn parts */
+.sc-road{stroke:var(--line-2);stroke-width:2}
+.sc-dash{stroke:var(--conc-2);stroke-width:2;stroke-dasharray:22 20;opacity:.5}
+.sc-body{fill:var(--steel-3);stroke:var(--line-2);stroke-width:2}
+.sc-cab{fill:var(--steel-3);stroke:var(--amber);stroke-width:2}
+.sc-deck{fill:var(--steel-2);stroke:var(--amber);stroke-width:2.5}
+.sc-car{fill:var(--steel-3);stroke:var(--signal);stroke-width:2}
+.sc-glass{fill:var(--asphalt);opacity:.75}
+.sc-tyre{fill:var(--asphalt);stroke:var(--conc-2);stroke-width:2}
+.sc-hub{fill:var(--conc-2)}
+.sc-cable{stroke:var(--amber);stroke-width:2.5;stroke-linecap:round;fill:none}
+.sc-beacon{fill:var(--amber)}
+
+@media (prefers-reduced-motion:reduce){
+  .scene-track{height:auto}
+  .scene-pin{position:static;height:auto;padding-block:var(--band)}
+  .stage{opacity:1;border-top-color:var(--line-2)}
+}
+@media (max-width:760px){
+  .scene-track{height:240vh}
+  .scene-art svg{max-height:38vh}
+  .stages{flex-direction:column;gap:0;border-top:0}
+  .stage{border-top:1px solid var(--line);border-left:3px solid transparent;padding:12px 0 12px 14px;margin-top:0}
+  .stage.on{border-top-color:var(--line);border-left-color:var(--amber)}
+}
+
+/* =================== DASH CLUSTER ===================
+   The telltales a stranded driver is actually looking at. Picking a situation
+   lights the matching one, so the selector reads like their own dashboard. */
+.dash{display:flex;align-items:center;gap:7px;padding:10px 24px 0;flex-wrap:wrap}
+.dash-lab{
+  font-family:var(--mono);font-size:.64rem;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--conc-2);margin-right:4px
+}
+.tt{
+  width:34px;height:30px;border-radius:5px;background:var(--steel-3);display:grid;place-items:center;
+  color:var(--conc-2);flex:none;transition:background-color .3s var(--ease),color .3s var(--ease),box-shadow .35s var(--ease)
+}
+.tt.lit{background:var(--amber);color:var(--on-amber);box-shadow:0 0 0 1px var(--amber),0 0 18px rgba(245,165,36,.5)}
+.tt.lit.emg{background:var(--flare);color:#fff;box-shadow:0 0 0 1px var(--flare),0 0 18px rgba(224,82,60,.55)}
+@media (prefers-reduced-motion:no-preference){ .tt.lit{animation:ttOn .5s var(--ease-out)} }
+@keyframes ttOn{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+@media (max-width:420px){.dash{padding-inline:16px}.tt{width:30px;height:27px}}
+
+/* =================== ROUTE MAP ===================
+   A schematic of where the trucks run, drawn on first view. Not a real map —
+   a diagram of reach, with the yard at the centre. pathLength="1" lets the
+   dash maths be exact without measuring anything. */
+.map{margin-top:clamp(26px,3.4vw,44px)}
+.map svg{width:100%;height:auto;display:block;overflow:visible}
+.rt{fill:none;stroke:var(--line-2);stroke-width:2.5;stroke-linecap:round;
+    stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.5s var(--ease-out)}
+.map.drawn .rt{stroke-dashoffset:0}
+.rt-main{stroke:var(--amber);stroke-width:3.5}
+.node{opacity:0;transform:scale(.4);transform-box:fill-box;transform-origin:center;
+      transition:opacity .5s var(--ease-out),transform .5s var(--ease-out)}
+.map.drawn .node{opacity:1;transform:scale(1)}
+.node circle{fill:var(--asphalt);stroke:var(--conc-2);stroke-width:2.5}
+.node.hub circle{fill:var(--amber);stroke:var(--amber)}
+.node text{fill:var(--conc);font-family:var(--mono);font-size:15px;letter-spacing:.06em}
+.node.hub text{fill:var(--signal);font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.01em}
+.map-pulse{fill:none;stroke:var(--amber);stroke-width:2;opacity:0}
+.map.drawn .map-pulse{animation:mapPing 3.2s ease-out 1.4s infinite}
+@keyframes mapPing{0%{r:14;opacity:.65}100%{r:52;opacity:0}}
+/* stagger the spokes */
+.map.drawn .rt:nth-of-type(1){transition-delay:.05s}
+.map.drawn .rt:nth-of-type(2){transition-delay:.18s}
+.map.drawn .rt:nth-of-type(3){transition-delay:.31s}
+.map.drawn .rt:nth-of-type(4){transition-delay:.44s}
+.map.drawn .rt:nth-of-type(5){transition-delay:.57s}
+.map.drawn .rt:nth-of-type(6){transition-delay:.70s}
+.map.drawn .node:nth-of-type(n+2){transition-delay:.9s}
+@media (prefers-reduced-motion:reduce){
+  .rt{stroke-dashoffset:0;transition:none}
+  .node{opacity:1;transform:none;transition:none}
+  .map.drawn .map-pulse{animation:none}
+}
+@media (max-width:760px){.node text{font-size:21px}.node.hub text{font-size:26px}}
+
 /* =================== MOTION LAYER =================== */
 /* scroll progress — amber into the blue half of a light bar */
 .prog{
@@ -838,6 +940,7 @@ html{scroll-behavior:smooth;scroll-padding-top:calc(120px + env(safe-area-inset-
         <div class="tri-pick" id="tri-pick" role="group" aria-label="What is happening"></div>
 
         <div class="tri-out" aria-live="polite">
+          <div class="dash" id="dash" aria-hidden="true"><span class="dash-lab">Dash</span></div>
           <div id="tri-render"></div>
           <div class="tri-foot">
             <a class="callbig" href="tel:+14193522626">
@@ -921,6 +1024,65 @@ html{scroll-behavior:smooth;scroll-padding-top:calc(120px + env(safe-area-inset-
             <ul class="svc-tags"><li>Trucks</li><li>Trailers</li><li>Towing gear</li></ul>
           </div>
         </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SCROLL SCENE: FLATBED LOAD ===================== -->
+  <section class="scene" aria-labelledby="scene-t">
+    <div class="scene-track" id="scene-track">
+      <div class="scene-pin">
+        <div class="scene-in">
+          <div class="scene-head">
+            <p class="kicker">On the hook</p>
+            <h2 class="h-lg" id="scene-t">How it goes on.</h2>
+          </div>
+
+          <div class="scene-art">
+            <svg viewBox="0 0 1000 400" role="img" aria-label="Diagram of a vehicle being winched onto a tilting flatbed tow truck">
+              <!-- ground -->
+              <line class="sc-road" x1="0" y1="320" x2="1000" y2="320"/>
+              <line class="sc-dash" x1="0" y1="352" x2="1000" y2="352"/>
+
+              <!-- deck pivots at its front; the car rides inside this group -->
+              <g id="sc-deck-g">
+                <rect class="sc-deck" x="340" y="248" width="430" height="10" rx="2"/>
+                <!-- headboard / winch post -->
+                <rect class="sc-body" x="754" y="186" width="16" height="64" rx="2"/>
+                <circle class="sc-hub" cx="762" cy="200" r="5"/>
+                <line class="sc-cable" id="sc-cable" x1="762" y1="200" x2="762" y2="200"/>
+
+                <g id="sc-car">
+                  <rect class="sc-car" x="0" y="198" width="170" height="34" rx="7"/>
+                  <path class="sc-car" d="M38 198 L57 173 H116 L137 198 Z"/>
+                  <path class="sc-glass" d="M46 196 L61 178 H112 L129 196 Z"/>
+                  <circle class="sc-tyre" cx="38" cy="232" r="16"/>
+                  <circle class="sc-tyre" cx="132" cy="232" r="16"/>
+                  <circle class="sc-hub" cx="38" cy="232" r="5"/>
+                  <circle class="sc-hub" cx="132" cy="232" r="5"/>
+                </g>
+              </g>
+
+              <!-- truck -->
+              <rect class="sc-body" x="560" y="258" width="330" height="18" rx="3"/>
+              <path class="sc-cab" d="M792 266 V176 H852 L886 212 V266 Z"/>
+              <path class="sc-glass" d="M800 206 V184 H846 L870 210 Z"/>
+              <rect class="sc-beacon" id="sc-beacon" x="806" y="166" width="42" height="9" rx="3"/>
+              <circle class="sc-tyre" cx="600" cy="288" r="31"/>
+              <circle class="sc-tyre" cx="672" cy="288" r="31"/>
+              <circle class="sc-tyre" cx="846" cy="288" r="31"/>
+              <circle class="sc-hub" cx="600" cy="288" r="10"/>
+              <circle class="sc-hub" cx="672" cy="288" r="10"/>
+              <circle class="sc-hub" cx="846" cy="288" r="10"/>
+            </svg>
+          </div>
+
+          <div class="stages" id="sc-stages">
+            <div class="stage on"><span class="n">01</span><b>Deck down</b><span>The bed tilts and slides back until it meets the road. No ramps, no lifting on a tow bar.</span></div>
+            <div class="stage"><span class="n">02</span><b>Winched on</b><span>Cable out, vehicle pulled up on its own wheels. Nothing is dragged and the drivetrain stays out of it.</span></div>
+            <div class="stage"><span class="n">03</span><b>Strapped and gone</b><span>Deck levels, wheels strapped at four points. All four tyres off the road for the whole trip.</span></div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -1072,6 +1234,29 @@ html{scroll-behavior:smooth;scroll-padding-top:calc(120px + env(safe-area-inset-
           and the I-75 corridor. Long-distance hauls go further — just ask.</p>
       </div>
       <!-- [CONFIRM] this list is inferred from the shop location, not a published map -->
+      <!-- [CONFIRM] schematic of reach, not a surveyed map. Towns are the ones
+           in the list below; positions are indicative. -->
+      <div class="map rv" id="map">
+        <svg viewBox="0 0 1000 300" role="img" aria-label="Diagram of service routes radiating from the yard in Bowling Green">
+          <path class="rt" pathLength="1" d="M500 150 Q 630 90 760 62"/>
+          <path class="rt" pathLength="1" d="M500 150 Q 690 140 852 112"/>
+          <path class="rt" pathLength="1" d="M500 150 Q 670 190 800 214"/>
+          <path class="rt rt-main" pathLength="1" d="M500 150 Q 530 220 566 272"/>
+          <path class="rt" pathLength="1" d="M500 150 Q 360 190 232 216"/>
+          <path class="rt" pathLength="1" d="M500 150 Q 370 110 252 86"/>
+
+          <circle class="map-pulse" cx="500" cy="150" r="14"/>
+
+          <g class="node hub"><circle cx="500" cy="150" r="13"/><text x="500" y="128" text-anchor="middle">BOWLING GREEN</text></g>
+          <g class="node"><circle cx="760" cy="62" r="7"/><text x="776" y="58">Perrysburg</text></g>
+          <g class="node"><circle cx="852" cy="112" r="7"/><text x="868" y="108">Rossford</text></g>
+          <g class="node"><circle cx="800" cy="214" r="7"/><text x="816" y="210">Pemberville</text></g>
+          <g class="node"><circle cx="566" cy="272" r="7"/><text x="582" y="268">North Baltimore</text></g>
+          <g class="node"><circle cx="232" cy="216" r="7"/><text x="216" y="212" text-anchor="end">Weston</text></g>
+          <g class="node"><circle cx="252" cy="86" r="7"/><text x="236" y="82" text-anchor="end">Haskins</text></g>
+        </svg>
+      </div>
+
       <div class="marq rv" id="marq">
         <ul class="marq-track" id="marq-track" aria-label="Service areas">
           <li>Bowling Green</li><li>Perrysburg</li><li>Rossford</li><li>Northwood</li>
@@ -1389,6 +1574,75 @@ html{scroll-behavior:smooth;scroll-padding-top:calc(120px + env(safe-area-inset-
     ob.observe(sec);
   })();
 
+  /* ======================================================================
+     SCROLL SCENE — flatbed load
+     Deck tilts (0–30%), car winches on (30–75%), deck levels (75–100%).
+     Everything is a transform on an SVG group, so it stays cheap.
+     ====================================================================== */
+  (function () {
+    var track = $("#scene-track"), deck = $("#sc-deck-g"), car = $("#sc-car"),
+        cable = $("#sc-cable"), stages = $$("#sc-stages .stage");
+    if (!track || !deck || !car) return;
+
+    var TILT = -9.5, PX = 770, PY = 253;      // pivot: front of the deck
+    var CAR_FROM = 150, CAR_TO = 520;         // local x, behind the deck → on it
+    var lerp = function (a, b, t) { return a + (b - a) * t; };
+    var clamp01 = function (v) { return v < 0 ? 0 : v > 1 ? 1 : v; };
+    var seg = function (p, a, b) { return clamp01((p - a) / (b - a)); };
+    var ease = function (t) { return t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; };
+
+    function apply(p) {
+      var down  = ease(seg(p, 0, .30));
+      var ride  = ease(seg(p, .30, .75));
+      var up    = ease(seg(p, .75, 1));
+      var angle = TILT * (down - up);         // down then back to level
+      var carX  = lerp(CAR_FROM, CAR_TO, ride);
+
+      deck.setAttribute("transform", "rotate(" + angle.toFixed(2) + " " + PX + " " + PY + ")");
+      car.setAttribute("transform", "translate(" + carX.toFixed(1) + " 0)");
+      // cable runs from the winch to the car's front edge
+      cable.setAttribute("x2", (carX + 170).toFixed(1));
+      cable.setAttribute("y2", "214");
+
+      var i = p < .30 ? 0 : p < .75 ? 1 : 2;
+      stages.forEach(function (s, n) { s.classList.toggle("on", n === i); });
+    }
+
+    if (reduce.matches) { apply(1); return; }   // static, secured end-state
+
+    function measure() {
+      var r = track.getBoundingClientRect();
+      var total = r.height - window.innerHeight;
+      apply(total > 0 ? clamp01(-r.top / total) : 0);
+    }
+
+    var raf = false;
+    function onScene() {
+      if (raf) return;
+      raf = true;
+      requestAnimationFrame(function () { raf = false; measure(); });
+    }
+
+    // Paint once synchronously. Scheduling the first frame through rAF leaves
+    // the guard latched true if the tab is backgrounded and no frame ever runs.
+    measure();
+    window.addEventListener("scroll", onScene, { passive: true });
+    window.addEventListener("resize", onScene, { passive: true });
+    document.addEventListener("visibilitychange", function () { raf = false; measure(); });
+  })();
+
+  /* ---------- route map: draw once, on first sight ---------- */
+  (function () {
+    var map = $("#map");
+    if (!map) return;
+    if (reduce.matches || !("IntersectionObserver" in window)) { map.classList.add("drawn"); return; }
+    var ob = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { map.classList.add("drawn"); ob.disconnect(); } });
+    }, { threshold: 0.25 });
+    ob.observe(map);
+    setTimeout(function () { map.classList.add("drawn"); }, 4000);  // never leave it undrawn
+  })();
+
   /* ---------- service-area belt: duplicate once so the loop is seamless ---------- */
   (function () {
     var track = $("#marq-track");
@@ -1584,6 +1838,18 @@ html{scroll-behavior:smooth;scroll-padding-top:calc(120px + env(safe-area-inset-
       tell: ["Year, make, model and mileage", "What it's doing and when it started", "Any recent work done on it"] },
   ];
 
+  /* Dashboard telltales — the light they're looking at right now. */
+  var TELL = {
+    nostart: '<path d="M4 8h16v10H4z" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M8 5h3v3H8zM13 5h3v3h-3z" fill="currentColor"/><path d="M7.5 13h3M9 11.5v3M13.5 13h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+    flat:    '<path d="M5 18a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M4 18h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 8v4M12 14.5v.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+    locked:  '<circle cx="9" cy="12" r="3.4" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M12.4 12H19M16.4 12v2.6M18.2 12v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+    accident:'<path d="M12 4.5 21 19H3L12 4.5Z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/><path d="M12 10v3.4M12 16v.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+    ditch:   '<path d="M3 16c3-.6 4.6-3 8-3s5 2 10 1.4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M7 11l1.6-3.6h5.4L16 11" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+    long:    '<path d="M12 3v18" stroke="currentColor" stroke-width="1.6" stroke-dasharray="3 3"/><path d="M8.6 6.4 12 3l3.4 3.4M8.6 17.6 12 21l3.4-3.4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+    truck:   '<path d="M3 15.5V7h9v8.5M12 10h3.2l2.8 3v2.5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="16.5" r="1.8" stroke="currentColor" stroke-width="1.5" fill="none"/><circle cx="16" cy="16.5" r="1.8" stroke="currentColor" stroke-width="1.5" fill="none"/>',
+    repair:  '<path d="M7 9.5V7h3.6l1.4 2.2h4L19 12v4.5H5V12l2-2.5Z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/><path d="M9.5 5h5M16.5 12.5h2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>'
+  };
+
   var pick = $("#tri-pick"), render = $("#tri-render"), current = "nostart";
 
   pick.innerHTML = CASES.map(function (c) {
@@ -1594,8 +1860,25 @@ html{scroll-behavior:smooth;scroll-padding-top:calc(120px + env(safe-area-inset-
   var dot = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 6.3 4.7 9 10 3.3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var bang = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M6 1.6 11 10.4H1L6 1.6Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M6 5.2v2M6 8.8v.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
 
+  var dash = $("#dash");
+  if (dash) {
+    dash.insertAdjacentHTML("beforeend", CASES.map(function (c) {
+      return '<span class="tt" data-tt="' + c.id + '" title="' + esc(c.label) + '">' +
+        '<svg width="19" height="19" viewBox="0 0 24 24" fill="none">' + (TELL[c.id] || "") + "</svg></span>";
+    }).join(""));
+  }
+  function lightDash() {
+    if (!dash) return;
+    $$("[data-tt]", dash).forEach(function (t) {
+      var on = t.getAttribute("data-tt") === current;
+      t.classList.toggle("lit", on);
+      t.classList.toggle("emg", on && current === "accident");
+    });
+  }
+
   function draw() {
     var c = CASES.filter(function (x) { return x.id === current; })[0];
+    lightDash();
     render.innerHTML =
       '<div class="fadein">' +
         '<div class="tri-head">' +
