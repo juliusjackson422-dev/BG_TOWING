@@ -15,7 +15,8 @@ bg-img/              8 photographs + 2 video loops (4.2 MB)
 
 ## 0. Right now this is a DEMO deploy, not a launch
 
-It is served from a GitHub Pages URL so the owner can look at it on a phone. While
+It is live at **https://juliusjackson422-dev.github.io/BG_TOWING/** so the owner can
+look at it on a phone. While
 it sits there, `index.html` carries `<meta name="robots" content="noindex, nofollow">`.
 
 That tag is deliberate and it is load-bearing. Without it, Google can index a copy
