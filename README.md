@@ -3,11 +3,37 @@
 A static site. No build step, no server, no framework. Everything it needs is in this folder.
 
 ```
-index.html      the whole site — markup, CSS and JS in one file
-404.html        not-found page (keeps the phone number in front of people)
-robots.txt      allows crawling, points at the sitemap
-sitemap.xml     one URL; add entries here if pages are added
-bg-img/         8 photographs + 2 video loops (4.2 MB)
+index.html           the whole site — markup, CSS and JS in one file
+404.html             not-found page (keeps the phone number in front of people)
+robots.txt           allows crawling, points at the sitemap
+sitemap.xml          one URL; add entries here if pages are added
+prelaunch-check.sh   run this before launch — lists everything still blocking
+bg-img/              8 photographs + 2 video loops (4.2 MB)
+```
+
+---
+
+## 0. Right now this is a DEMO deploy, not a launch
+
+It is served from a GitHub Pages URL so the owner can look at it on a phone. While
+it sits there, `index.html` carries `<meta name="robots" content="noindex, nofollow">`.
+
+That tag is deliberate and it is load-bearing. Without it, Google can index a copy
+of a real business's site at a URL the business does not own, carrying a 24/7 claim
+nobody has confirmed. **`robots.txt` does not help here** — on a `github.io/PROJECT/`
+URL, crawlers only ever read `github.io/robots.txt`, which is not ours. The meta tag
+is the only control that actually applies.
+
+**When the real domain is ready**, in this order:
+
+1. Work through section 1 below until `./prelaunch-check.sh` exits clean.
+2. Delete the `<meta name="robots">` line and the STAGING comment above it in `index.html`.
+3. Point the domain at the host, and turn the GitHub Pages deploy **off**
+   (Settings → Pages → Source → None) so the demo URL stops serving a second copy.
+4. Re-run `./prelaunch-check.sh`. It must print `CLEAR TO LAUNCH.`
+
+```bash
+./prelaunch-check.sh
 ```
 
 ---
