@@ -593,9 +593,17 @@ html{scroll-behavior:smooth;scroll-padding-top:calc(120px + env(safe-area-inset-
    deck tilts, cable pays out, car winches on, deck levels. Pure SVG — no
    library, no 3D, nothing to distort. Static end-state under reduced motion. */
 .scene{position:relative;background:var(--steel);border-block:1px solid var(--line)}
-.scene-track{height:300vh}                 /* scroll distance the sequence consumes */
-.scene-pin{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+.scene-track{padding-block:var(--band)}
+.scene-pin{display:flex;flex-direction:column;justify-content:center}
 .scene-in{width:100%;max-width:1240px;margin-inline:auto;padding-left:var(--gut-l);padding-right:var(--gut-r)}
+
+/* The sequence plays itself on a timer. Transforms and dashoffset are handed
+   to CSS transitions, so the motion is compositor-smooth and never depends on
+   scroll position, scroll container, or a frame callback firing. */
+#sc-deck-g{transform-box:view-box;transform-origin:770px 253px;transition:transform 1.15s cubic-bezier(.45,.05,.3,1)}
+#sc-car{transform-box:view-box;transition:transform 2.1s cubic-bezier(.4,.04,.32,1)}
+#sc-cable{stroke-dasharray:1;stroke-dashoffset:0;transition:stroke-dashoffset 2.1s cubic-bezier(.4,.04,.32,1),opacity .4s}
+#sc-rig{transition:opacity .55s var(--ease)}
 .scene-head{display:flex;flex-direction:column;gap:12px;max-width:50ch;margin-bottom:clamp(14px,2.4vw,28px)}
 .scene-art{width:100%}
 .scene-art svg{width:100%;height:auto;max-height:52vh;display:block;overflow:visible}
@@ -625,12 +633,10 @@ html{scroll-behavior:smooth;scroll-padding-top:calc(120px + env(safe-area-inset-
 .sc-beacon{fill:var(--amber)}
 
 @media (prefers-reduced-motion:reduce){
-  .scene-track{height:auto}
-  .scene-pin{position:static;height:auto;padding-block:var(--band)}
+  #sc-deck-g,#sc-car,#sc-cable,#sc-rig{transition:none}
   .stage{opacity:1;border-top-color:var(--line-2)}
 }
 @media (max-width:760px){
-  .scene-track{height:240vh}
   .scene-art svg{max-height:38vh}
   .stages{flex-direction:column;gap:0;border-top:0}
   .stage{border-top:1px solid var(--line);border-left:3px solid transparent;padding:12px 0 12px 14px;margin-top:0}
@@ -1038,7 +1044,7 @@ html{scroll-behavior:smooth;scroll-padding-top:calc(120px + env(safe-area-inset-
             <h2 class="h-lg" id="scene-t">How it goes on.</h2>
           </div>
 
-          <div class="scene-art">
+          <div class="scene-art" id="sc-rig">
             <svg viewBox="0 0 1000 400" role="img" aria-label="Diagram of a vehicle being winched onto a tilting flatbed tow truck">
               <!-- ground -->
               <line class="sc-road" x1="0" y1="320" x2="1000" y2="320"/>
@@ -1050,7 +1056,8 @@ html{scroll-behavior:smooth;scroll-padding-top:calc(120px + env(safe-area-inset-
                 <!-- headboard / winch post -->
                 <rect class="sc-body" x="754" y="186" width="16" height="64" rx="2"/>
                 <circle class="sc-hub" cx="762" cy="200" r="5"/>
-                <line class="sc-cable" id="sc-cable" x1="762" y1="200" x2="762" y2="200"/>
+                <!-- cable drawn at full reach; dashoffset shortens it as the car closes in -->
+                <line class="sc-cable" id="sc-cable" x1="762" y1="200" x2="320" y2="214" pathLength="1"/>
 
                 <g id="sc-car">
                   <rect class="sc-car" x="0" y="198" width="170" height="34" rx="7"/>
@@ -1575,60 +1582,71 @@ html{scroll-behavior:smooth;scroll-padding-top:calc(120px + env(safe-area-inset-
   })();
 
   /* ======================================================================
-     SCROLL SCENE — flatbed load
-     Deck tilts (0–30%), car winches on (30–75%), deck levels (75–100%).
-     Everything is a transform on an SVG group, so it stays cheap.
+     FLATBED LOAD — plays itself
+     A timed state machine; CSS transitions do the easing. Deliberately not
+     scroll-scrubbed: that only moves if the scroll container cooperates and
+     needs three screens of deliberate scrolling before anything happens.
      ====================================================================== */
   (function () {
     var track = $("#scene-track"), deck = $("#sc-deck-g"), car = $("#sc-car"),
         cable = $("#sc-cable"), stages = $$("#sc-stages .stage");
     if (!track || !deck || !car) return;
 
-    var TILT = -9.5, PX = 770, PY = 253;      // pivot: front of the deck
-    var CAR_FROM = 150, CAR_TO = 520;         // local x, behind the deck → on it
-    var lerp = function (a, b, t) { return a + (b - a) * t; };
-    var clamp01 = function (v) { return v < 0 ? 0 : v > 1 ? 1 : v; };
-    var seg = function (p, a, b) { return clamp01((p - a) / (b - a)); };
-    var ease = function (t) { return t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; };
+    var rig = $("#sc-rig");
 
-    function apply(p) {
-      var down  = ease(seg(p, 0, .30));
-      var ride  = ease(seg(p, .30, .75));
-      var up    = ease(seg(p, .75, 1));
-      var angle = TILT * (down - up);         // down then back to level
-      var carX  = lerp(CAR_FROM, CAR_TO, ride);
+    /* deck angle · car x · how much cable is still paid out · caption · dwell */
+    var STEPS = [
+      { deck: 0,    car: 150, cable: 0,    op: 0, stage: 0, hold: 1100 },
+      { deck: -9.5, car: 150, cable: 0,    op: 1, stage: 0, hold: 1700 },
+      { deck: -9.5, car: 520, cable: .837, op: 1, stage: 1, hold: 2700 },
+      { deck: 0,    car: 520, cable: .837, op: 0, stage: 2, hold: 3400 }
+    ];
 
-      deck.setAttribute("transform", "rotate(" + angle.toFixed(2) + " " + PX + " " + PY + ")");
-      car.setAttribute("transform", "translate(" + carX.toFixed(1) + " 0)");
-      // cable runs from the winch to the car's front edge
-      cable.setAttribute("x2", (carX + 170).toFixed(1));
-      cable.setAttribute("y2", "214");
+    var i = 0, timer = null, playing = false;
+    var moving = [deck, car, cable];
 
-      var i = p < .30 ? 0 : p < .75 ? 1 : 2;
-      stages.forEach(function (s, n) { s.classList.toggle("on", n === i); });
+    function paint(s) {
+      deck.style.transform = "rotate(" + s.deck + "deg)";
+      car.style.transform = "translateX(" + s.car + "px)";
+      cable.style.strokeDashoffset = s.cable;
+      cable.style.opacity = s.op;
+      stages.forEach(function (x, n) { x.classList.toggle("on", n === s.stage); });
     }
 
-    if (reduce.matches) { apply(1); return; }   // static, secured end-state
+    if (reduce.matches) { paint(STEPS[3]); return; }   // secured, no motion
 
-    function measure() {
-      var r = track.getBoundingClientRect();
-      var total = r.height - window.innerHeight;
-      apply(total > 0 ? clamp01(-r.top / total) : 0);
+    function step() {
+      if (!playing) return;
+      paint(STEPS[i]);
+      timer = setTimeout(function () {
+        if (++i < STEPS.length) return step();
+        // Reset without a reverse slide: fade the drawing, snap, fade back.
+        rig.style.opacity = "0";
+        timer = setTimeout(function () {
+          i = 0;
+          moving.forEach(function (el) { el.style.transition = "none"; });
+          paint(STEPS[0]);
+          void rig.offsetWidth;                        // commit the snap
+          moving.forEach(function (el) { el.style.transition = ""; });
+          rig.style.opacity = "1";
+          timer = setTimeout(step, 420);
+        }, 580);
+      }, STEPS[i].hold);
     }
 
-    var raf = false;
-    function onScene() {
-      if (raf) return;
-      raf = true;
-      requestAnimationFrame(function () { raf = false; measure(); });
-    }
+    function start() { if (playing) return; playing = true; step(); }
+    function stop() { playing = false; clearTimeout(timer); }
 
-    // Paint once synchronously. Scheduling the first frame through rAF leaves
-    // the guard latched true if the tab is backgrounded and no frame ever runs.
-    measure();
-    window.addEventListener("scroll", onScene, { passive: true });
-    window.addEventListener("resize", onScene, { passive: true });
-    document.addEventListener("visibilitychange", function () { raf = false; measure(); });
+    paint(STEPS[0]);
+    // Run it only while it is on screen — no point animating out of view.
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (es) {
+        es.forEach(function (e) { e.isIntersecting ? start() : stop(); });
+      }, { threshold: 0.2 }).observe(track);
+    } else { start(); }
+    document.addEventListener("visibilitychange", function () {
+      document.hidden ? stop() : start();
+    });
   })();
 
   /* ---------- route map: draw once, on first sight ---------- */
