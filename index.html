@@ -686,6 +686,12 @@ html{scroll-behavior:smooth;scroll-padding-top:calc(120px + env(safe-area-inset-
 }
 @media (max-width:640px){
   :root{--band:clamp(46px,10vw,66px)}
+  /* .brand is flex:none, so at narrow widths it can out-measure the viewport
+     and push the header off-screen. Let it shrink and drop the sub-label. */
+  .brand{min-width:0;flex:0 1 auto}
+  .brand-s{display:none}
+  .brand-tx{min-width:0}
+  .brand-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .svc-grid{grid-template-columns:1fr}
   .gal{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
   .creds-in{grid-template-columns:1fr}
