@@ -450,6 +450,29 @@ form.sent .f-live{display:none}
 .ft li{list-style:none;font-size:.9rem;color:var(--conc)}
 .ft a{text-decoration:none;color:var(--conc);transition:color .2s}
 .ft a:hover{color:var(--amber)}
+
+/* ---------- Tap targets -------------------------------------------------
+   WCAG 2.5.8 asks for an interactive target of at least 24x24 CSS px. The
+   footer links measured 18px tall, the strip phone number 15px and the
+   inline phone in the contact row 22px. (44px is the iOS figure, not the
+   web one, so it is applied only where a finger is actually in use.)
+
+   Two different fixes, because the cases differ. Links that can afford to
+   grow get a real min-height. Links sitting inside a line of running text
+   get an invisible overlay instead: the hit area grows, nothing moves.
+   ------------------------------------------------------------------- */
+.ft li a,.ft-bot nav a{display:inline-flex;align-items:center;min-height:24px}
+@media (pointer:coarse){
+  /* Tighter gap so the taller links do not stretch the footer as much. */
+  .ft ul{gap:2px}
+  .ft li a,.ft-bot nav a{min-height:44px}
+}
+
+.alert-in a,.ct-row a[href^="tel:"]{position:relative}
+.alert-in a::after,.ct-row a[href^="tel:"]::after{
+  content:"";position:absolute;left:0;right:0;top:50%;
+  transform:translateY(-50%);height:44px
+}
 .ft-brand{display:flex;flex-direction:column;gap:14px;min-width:0}
 .ft-brand p{font-size:.9rem;color:var(--conc);max-width:42ch}
 .ft-dot{
@@ -825,7 +848,6 @@ html{scroll-behavior:smooth;scroll-padding-top:calc(120px + env(safe-area-inset-
 </style>
 </head>
 <body>
-
 <!-- ===================== HEADER ===================== -->
 <a href="#main" class="sr">Skip to content</a>
 <div class="prog" id="prog" aria-hidden="true"></div>
@@ -1115,14 +1137,14 @@ html{scroll-behavior:smooth;scroll-padding-top:calc(120px + env(safe-area-inset-
           to a job that needs a flatbed costs everybody an hour.</p>
       </div>
       <div class="gal rv-s">
-        <a href="#help"><img src="bg-img/flatbed-car.jpg" alt="A car secured on a flatbed" loading="lazy"><b>Flatbed<em>Cars · AWD · low clearance</em></b></a>
-        <a href="#help"><img src="bg-img/flatbed.jpg" alt="A damaged vehicle loaded after a collision" loading="lazy"><b>Recovery<em>Collision · ditch · winch-out</em></b></a>
-        <a href="#help"><img src="bg-img/semi.jpg" alt="A semi truck on the highway" loading="lazy"><b>Heavy duty<em>Trucks · buses · RV</em></b></a>
-        <a href="#help"><img src="bg-img/battery.jpg" alt="Jumper cables on a car battery" loading="lazy"><b>Roadside<em>Jump · lockout · tire · fuel</em></b></a>
-        <a href="#contact"><img src="bg-img/repair-bay.jpg" alt="Vehicles on lifts in a repair bay" loading="lazy"><b>The shop<em>Diagnostics · brakes · engine</em></b></a>
-        <a href="#contact"><img src="bg-img/mechanic.jpg" alt="A technician working under a vehicle" loading="lazy"><b>Truck work<em>Medium &amp; heavy duty</em></b></a>
-        <a href="#contact"><img src="bg-img/workshop.jpg" alt="The workshop" loading="lazy"><b>U-Haul<em>Trucks &amp; trailers</em></b></a>
-        <a href="#help"><img src="bg-img/hero-night.jpg" alt="A recovery truck working at night" loading="lazy"><b>After dark<em>Nights · weekends · holidays</em></b></a>
+        <a href="#help"><img src="bg-img/flatbed-car.jpg" alt="A car secured on a flatbed" loading="lazy" width="900" height="1200"><b>Flatbed<em>Cars · AWD · low clearance</em></b></a>
+        <a href="#help"><img src="bg-img/flatbed.jpg" alt="A damaged vehicle loaded after a collision" loading="lazy" width="900" height="1200"><b>Recovery<em>Collision · ditch · winch-out</em></b></a>
+        <a href="#help"><img src="bg-img/semi.jpg" alt="A semi truck on the highway" loading="lazy" width="900" height="1200"><b>Heavy duty<em>Trucks · buses · RV</em></b></a>
+        <a href="#help"><img src="bg-img/battery.jpg" alt="Jumper cables on a car battery" loading="lazy" width="900" height="1200"><b>Roadside<em>Jump · lockout · tire · fuel</em></b></a>
+        <a href="#contact"><img src="bg-img/repair-bay.jpg" alt="Vehicles on lifts in a repair bay" loading="lazy" width="900" height="1200"><b>The shop<em>Diagnostics · brakes · engine</em></b></a>
+        <a href="#contact"><img src="bg-img/mechanic.jpg" alt="A technician working under a vehicle" loading="lazy" width="900" height="1200"><b>Truck work<em>Medium &amp; heavy duty</em></b></a>
+        <a href="#contact"><img src="bg-img/workshop.jpg" alt="The workshop" loading="lazy" width="900" height="1200"><b>U-Haul<em>Trucks &amp; trailers</em></b></a>
+        <a href="#help"><img src="bg-img/hero-night.jpg" alt="A recovery truck working at night" loading="lazy" width="900" height="1200"><b>After dark<em>Nights · weekends · holidays</em></b></a>
       </div>
     </div>
   </section>
